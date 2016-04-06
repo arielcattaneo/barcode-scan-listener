@@ -16,6 +16,25 @@ export default {
     if (typeof scanHandler !== 'function') {
       throw new TypeError('scanHandler must be a function');
     }
+
+    /**
+     * SwipeTrack calls this function, if defined, whenever a barcode is scanned
+     * within the SwipeTrack browser.  See "SwipeTrack Browser JavaScript Functions" section of
+     * SwipeTrack API: http://swipetrack.net/support/faq/pdf/SwipeTrack%20API%20(v5.0.0).pdf
+    */
+    if (typeof window.onScanAppBarCodeData !== 'function') {
+       window.onScanAppBarCodeData = function (barcode) {
+         window.onScanAppBarCodeData.scanHandlers.forEach((handler) => handler(barcode));
+         return true;
+       };
+       window.onScanAppBarCodeData.scanHandlers = [];
+    }
+    const swipeTrackHandler = function (barcode) {
+      if (barcode.match(`^${barcodePrefix}`) != null)
+        scanHandler(barcode.slice(barcodePrefix.length));
+    };
+    window.onScanAppBarCodeData.scanHandlers.push(swipeTrackHandler);
+
     scanDuration = scanDuration || 50;
     let isScanning = false;
     let codeBuffer = '';
@@ -44,6 +63,9 @@ export default {
     }
     const removeListener = function () {
       document.removeEventListener('keypress', keypressHandler);
+      const swipeTrackHandlerIndex = window.onScanAppBarCodeData.scanHandlers.indexOf(swipeTrackHandler);
+      if (swipeTrackHandlerIndex >= 0)
+        window.onScanAppBarCodeData.scanHandlers.splice(swipeTrackHandlerIndex, 1);
     }
     document.addEventListener('keypress', keypressHandler);
     return removeListener;
