@@ -77,4 +77,54 @@ describe('barcodeScanListener.onScan()', function () {
     scanBarcode('L%123abc')
     expect(scanHandler).not.to.have.been.called
   });
+
+  describe('SwipeTrack adapter', function () {
+    it('does not call through to scanHandler if prefix does not match', function () {
+      const scanHandler = sinon.stub()
+      barcodeScanListener.onScan({barcodePrefix: 'L%'}, scanHandler);
+      window.onScanAppBarCodeData('S%123abc')
+      expect(scanHandler).not.to.have.been.called
+    });
+
+    it('calls through to scanHandler if prefix matches', function () {
+      const scanHandler = sinon.stub()
+      barcodeScanListener.onScan({barcodePrefix: 'L%'}, scanHandler);
+      window.onScanAppBarCodeData('L%123abc')
+      expect(scanHandler).to.have.been.calledOnce
+      expect(scanHandler).to.have.been.calledWith('123abc')
+    });
+
+    it('works with multiple listeners', function () {
+      const lotScanHandler = sinon.stub()
+      barcodeScanListener.onScan({barcodePrefix: 'L%'}, lotScanHandler);
+
+      const sheepScanHandler = sinon.stub()
+      barcodeScanListener.onScan({barcodePrefix: 'S%'}, sheepScanHandler);
+
+      window.onScanAppBarCodeData('L%mylot')
+      window.onScanAppBarCodeData('S%mysheep')
+
+      expect(lotScanHandler).to.have.been.calledOnce
+      expect(lotScanHandler).to.have.been.calledWith('mylot')
+
+      expect(sheepScanHandler).to.have.been.calledOnce
+      expect(sheepScanHandler).to.have.been.calledWith('mysheep')
+    });
+
+    it('removes the listener on remove', function () {
+      const lotScanHandler = sinon.stub()
+      const removeListener = barcodeScanListener.onScan({barcodePrefix: 'L%'}, lotScanHandler);
+
+      const sheepScanHandler = sinon.stub()
+      barcodeScanListener.onScan({barcodePrefix: 'S%'}, sheepScanHandler);
+
+      removeListener()
+
+      window.onScanAppBarCodeData('S%123abc')
+      expect(sheepScanHandler).to.have.been.calledOnce
+
+      window.onScanAppBarCodeData('L%123abc')
+      expect(lotScanHandler).not.to.have.been.called
+    });
+  });
 });
