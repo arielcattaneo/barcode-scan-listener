@@ -22,6 +22,22 @@ const removeScanListener = barcodeScanListener.onScan({
 removeScanListener()
 ```
 
+#### `barcodeLength`
+If your barcodes have a known, fixed length, eliminate partial scans and double scans
+by passng in `barcodeLength` - your callback will only be called if `barcodeLength`
+number of characters are reached, and any characters read past that length before
+`scanDuration` is reached will be ignored.
+
+```js
+barcodeScanListener.onScan({
+  barcodePrefix: 'L%',
+  barcodeLength: 24,
+  scanDuration: 500
+}, function (barcode) {
+  console.log(barcode);
+});
+```
+
 ## Contributing
 
 This module is written in ES2015 and converted to node-friendly CommonJS via

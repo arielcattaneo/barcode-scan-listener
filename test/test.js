@@ -35,6 +35,14 @@ describe('barcodeScanListener.onScan()', function () {
       expect(createOnScan).to.throw('scanHandler must be a function');
     });
 
+    it('errors if barcodeLength not a number', function () {
+      const createOnScan = () => barcodeScanListener.onScan({
+        barcodePrefix: 'L%',
+        barcodeLength: '24'
+      }, sinon.stub());
+      expect(createOnScan).to.throw('barcodeLength must be a number');
+    });
+
     it('errors if scan duration not a number', function () {
       const createOnScan = () => barcodeScanListener.onScan({
         barcodePrefix: 'L%',
@@ -58,6 +66,31 @@ describe('barcodeScanListener.onScan()', function () {
       barcodeScanListener.onScan({barcodePrefix: 'L%'}, scanHandler);
       scanBarcode('C%123abc')
       expect(scanHandler).not.to.have.been.called()
+    });
+  });
+
+  describe('barcodeLength', function () {
+    it('does not call handler for scanned barcode shorter than configured length', function () {
+      const scanHandler = sinon.stub()
+      barcodeScanListener.onScan({barcodePrefix: 'L%', barcodeLength: 7}, scanHandler);
+      scanBarcode('L%123abc')
+      expect(scanHandler).not.to.have.been.called()
+    });
+
+    it('calls handler with truncated barcode for scanned barcode greater than configured length', function () {
+      const scanHandler = sinon.stub()
+      barcodeScanListener.onScan({barcodePrefix: 'L%', barcodeLength: 5}, scanHandler);
+      scanBarcode('L%123abc')
+      expect(scanHandler).to.have.been.calledOnce()
+      expect(scanHandler).to.have.been.calledWith('123ab')
+    });
+
+    it('calls handler for scanned barcode with configured length', function () {
+      const scanHandler = sinon.stub()
+      barcodeScanListener.onScan({barcodePrefix: 'L%', barcodeLength: 6}, scanHandler);
+      scanBarcode('L%123abc')
+      expect(scanHandler).to.have.been.calledOnce()
+      expect(scanHandler).to.have.been.calledWith('123abc')
     });
   });
 
