@@ -2,12 +2,14 @@
 
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
+import dirtyChai from 'dirty-chai';
 import _ from 'lodash';
 import sinon from 'sinon';
 
 import barcodeScanListener from '../build';
 
 chai.use(sinonChai);
+chai.use(dirtyChai);
 const expect = chai.expect;
 
 const scanBarcode = function (barcode) {
@@ -44,7 +46,7 @@ describe('barcodeScanListener.onScan()', function () {
     const scanHandler = sinon.stub()
     barcodeScanListener.onScan({barcodePrefix: 'L%'}, scanHandler);
     scanBarcode('L%123abc')
-    expect(scanHandler).to.have.been.calledOnce
+    expect(scanHandler).to.have.been.calledOnce()
     expect(scanHandler).to.have.been.calledWith('123abc')
   });
 
@@ -52,7 +54,7 @@ describe('barcodeScanListener.onScan()', function () {
     const scanHandler = sinon.stub()
     barcodeScanListener.onScan({barcodePrefix: 'L%'}, scanHandler);
     scanBarcode('C%123abc')
-    expect(scanHandler).not.to.have.been.called
+    expect(scanHandler).not.to.have.been.called()
   });
 
   it('does not call handler if scan not finished within scan duration', function () {
@@ -62,19 +64,19 @@ describe('barcodeScanListener.onScan()', function () {
       scanDuration: 25
     }, scanHandler);
     scanBarcode('C%123abc')
-    expect(scanHandler).not.to.have.been.called
+    expect(scanHandler).not.to.have.been.called()
   });
 
   it('removes the listener', function () {
     const scanHandler = sinon.stub()
     const removeListener = barcodeScanListener.onScan({barcodePrefix: 'L%'}, scanHandler);
     scanBarcode('L%123abc')
-    expect(scanHandler).to.have.been.calledOnce
+    expect(scanHandler).to.have.been.calledOnce()
     expect(scanHandler).to.have.been.calledWith('123abc')
     scanHandler.reset()
     removeListener()
     scanBarcode('L%123abc')
-    expect(scanHandler).not.to.have.been.called
+    expect(scanHandler).not.to.have.been.called()
   });
 
   describe('SwipeTrack adapter', function () {
@@ -82,14 +84,14 @@ describe('barcodeScanListener.onScan()', function () {
       const scanHandler = sinon.stub()
       barcodeScanListener.onScan({barcodePrefix: 'L%'}, scanHandler);
       window.onScanAppBarCodeData('S%123abc')
-      expect(scanHandler).not.to.have.been.called
+      expect(scanHandler).not.to.have.been.called()
     });
 
     it('calls through to scanHandler if prefix matches', function () {
       const scanHandler = sinon.stub()
       barcodeScanListener.onScan({barcodePrefix: 'L%'}, scanHandler);
       window.onScanAppBarCodeData('L%123abc')
-      expect(scanHandler).to.have.been.calledOnce
+      expect(scanHandler).to.have.been.calledOnce()
       expect(scanHandler).to.have.been.calledWith('123abc')
     });
 
@@ -103,10 +105,10 @@ describe('barcodeScanListener.onScan()', function () {
       window.onScanAppBarCodeData('L%mylot')
       window.onScanAppBarCodeData('S%mysheep')
 
-      expect(lotScanHandler).to.have.been.calledOnce
+      expect(lotScanHandler).to.have.been.calledOnce()
       expect(lotScanHandler).to.have.been.calledWith('mylot')
 
-      expect(sheepScanHandler).to.have.been.calledOnce
+      expect(sheepScanHandler).to.have.been.calledOnce()
       expect(sheepScanHandler).to.have.been.calledWith('mysheep')
     });
 
@@ -120,10 +122,10 @@ describe('barcodeScanListener.onScan()', function () {
       removeListener()
 
       window.onScanAppBarCodeData('S%123abc')
-      expect(sheepScanHandler).to.have.been.calledOnce
+      expect(sheepScanHandler).to.have.been.calledOnce()
 
       window.onScanAppBarCodeData('L%123abc')
-      expect(lotScanHandler).not.to.have.been.called
+      expect(lotScanHandler).not.to.have.been.called()
     });
   });
 });
