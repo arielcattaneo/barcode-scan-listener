@@ -24,47 +24,53 @@ const scanBarcode = function (barcode) {
 };
 
 describe('barcodeScanListener.onScan()', function () {
-  it('errors if no barcode prefix', function () {
-    const createOnScan = () => barcodeScanListener.onScan({}, sinon.stub());
-    expect(createOnScan).to.throw('barcodePrefix must be a string');
+  describe('validation', function () {
+    it('errors if no barcode prefix', function () {
+      const createOnScan = () => barcodeScanListener.onScan({}, sinon.stub());
+      expect(createOnScan).to.throw('barcodePrefix must be a string');
+    });
+
+    it('errors if callback not a function', function () {
+      const createOnScan = () => barcodeScanListener.onScan({barcodePrefix: 'L%'}, 5);
+      expect(createOnScan).to.throw('scanHandler must be a function');
+    });
+
+    it('errors if scan duration not a number', function () {
+      const createOnScan = () => barcodeScanListener.onScan({
+        barcodePrefix: 'L%',
+        scanDuration: '500'
+      }, sinon.stub());
+      expect(createOnScan).to.throw('scanDuration must be a number');
+    });
   });
 
-  it('errors if callback not a function', function () {
-    const createOnScan = () => barcodeScanListener.onScan({barcodePrefix: 'L%'}, 5);
-    expect(createOnScan).to.throw('scanHandler must be a function');
+  describe('barcodePrefix', function () {
+    it('calls handler for scanned barcode with prefix', function () {
+      const scanHandler = sinon.stub()
+      barcodeScanListener.onScan({barcodePrefix: 'L%'}, scanHandler);
+      scanBarcode('L%123abc')
+      expect(scanHandler).to.have.been.calledOnce()
+      expect(scanHandler).to.have.been.calledWith('123abc')
+    });
+
+    it('does not call handler if barcode does not match prefix', function () {
+      const scanHandler = sinon.stub()
+      barcodeScanListener.onScan({barcodePrefix: 'L%'}, scanHandler);
+      scanBarcode('C%123abc')
+      expect(scanHandler).not.to.have.been.called()
+    });
   });
 
-  it('errors if scan duration not a number', function () {
-    const createOnScan = () => barcodeScanListener.onScan({
-      barcodePrefix: 'L%',
-      scanDuration: '500'
-    }, sinon.stub());
-    expect(createOnScan).to.throw('scanDuration must be a number');
-  });
-
-  it('calls handler for scanned barcode with prefix', function () {
-    const scanHandler = sinon.stub()
-    barcodeScanListener.onScan({barcodePrefix: 'L%'}, scanHandler);
-    scanBarcode('L%123abc')
-    expect(scanHandler).to.have.been.calledOnce()
-    expect(scanHandler).to.have.been.calledWith('123abc')
-  });
-
-  it('does not call handler if barcode does not match prefix', function () {
-    const scanHandler = sinon.stub()
-    barcodeScanListener.onScan({barcodePrefix: 'L%'}, scanHandler);
-    scanBarcode('C%123abc')
-    expect(scanHandler).not.to.have.been.called()
-  });
-
-  it('does not call handler if scan not finished within scan duration', function () {
-    const scanHandler = sinon.stub()
-    barcodeScanListener.onScan({
-      barcodePrefix: 'L%',
-      scanDuration: 25
-    }, scanHandler);
-    scanBarcode('C%123abc')
-    expect(scanHandler).not.to.have.been.called()
+  describe('scanDuration', function () {
+    it('does not call handler if scan not finished within scan duration', function () {
+      const scanHandler = sinon.stub()
+      barcodeScanListener.onScan({
+        barcodePrefix: 'L%',
+        scanDuration: 25
+      }, scanHandler);
+      scanBarcode('C%123abc')
+      expect(scanHandler).not.to.have.been.called()
+    });
   });
 
   it('removes the listener', function () {
