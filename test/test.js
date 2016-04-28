@@ -55,7 +55,7 @@ describe('barcodeScanListener.onScan()', function () {
     expect(scanHandler).not.to.have.been.called
   });
 
-  it('does call handler if scan not finished within scan duration', function () {
+  it('does not call handler if scan not finished within scan duration', function () {
     const scanHandler = sinon.stub()
     barcodeScanListener.onScan({
       barcodePrefix: 'L%',
