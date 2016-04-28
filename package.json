@@ -30,7 +30,7 @@
     "chai": "^3.5.0",
     "dirty-chai": "^1.2.2",
     "eslint": "^2.8.0",
-    "eslint-plugin-goodeggs": "^1.4.0",
+    "eslint-plugin-goodeggs": "^2.0.0",
     "in-publish": "^2.0.0",
     "jsdom": "^8.1.0",
     "lodash": "^4.8.2",
