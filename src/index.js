@@ -1,3 +1,5 @@
+/* eslint-env browser */
+
 export default {
   /**
    * Listen for scan with specified characteristics

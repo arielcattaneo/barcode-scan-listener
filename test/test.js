@@ -1,5 +1,4 @@
-/* eslint-env mocha */
-/* global expect:false, given:false */
+/* eslint-env goodeggs/server-side-test */
 
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
