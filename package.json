@@ -50,6 +50,7 @@
     "build": "rm -rf build/ && babel src -d build && cp package.json can_publish build/",
     "lint": "eslint 'src/**/*.js'  --ignore-path .gitignore",
     "prepublish": "./can_publish",
+    "postpublish": "npm cache clean",
     "test": "npm run build && mocha --require=test/jsdom"
   },
   "publishConfig": {
