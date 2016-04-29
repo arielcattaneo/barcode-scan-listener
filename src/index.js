@@ -4,13 +4,18 @@ export default {
   /**
    * Listen for scan with specified characteristics
    * @param  {String} scanCharacteristics.barcodePrefix
+   * @param  {Number} [scanCharacteristics.barcodeLength] - if provided, the listener will
+   * wait for this many characters to be read before calling the handler
    * @param  {Number} [scanCharacteristics.scanDuration]
    * @param  {Function} scanHandler - called with the results of the scan
    * @return {Function} remove this listener
    */
-  onScan ({barcodePrefix, scanDuration} = {}, scanHandler) {
+  onScan ({barcodePrefix, barcodeLength, scanDuration} = {}, scanHandler) {
     if (typeof barcodePrefix !== 'string') {
       throw new TypeError('barcodePrefix must be a string');
+    }
+    if (barcodeLength && typeof barcodeLength !== 'number') {
+      throw new TypeError('barcodeLength must be a number');
     }
     if (scanDuration && typeof scanDuration !== 'number') {
       throw new TypeError('scanDuration must be a number');
@@ -43,7 +48,10 @@ export default {
     let scannedPrefix = '';
     const finishScan = function () {
       if (codeBuffer) {
-        scanHandler(codeBuffer);
+        if (!barcodeLength)
+          scanHandler(codeBuffer);
+        else if (codeBuffer.length >= barcodeLength)
+          scanHandler(codeBuffer.substr(0, barcodeLength));
       }
       scannedPrefix = '';
       codeBuffer = '';
