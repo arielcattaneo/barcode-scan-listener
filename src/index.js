@@ -3,19 +3,24 @@
 export default {
   /**
    * Listen for scan with specified characteristics
-   * @param  {String} scanCharacteristics.barcodePrefix
-   * @param  {Number} [scanCharacteristics.barcodeLength] - if provided, the listener will
-   * wait for this many characters to be read before calling the handler
-   * @param  {Number} [scanCharacteristics.scanDuration]
+   * @param  {String} scanOptions.barcodePrefix
+   * @param  {RegExp} scanOptions.barcodeValueTest - RegExp defining valid scan value (not including prefix).
+   * @param  {Boolean} [scanOptions.finishScanOnMatch] - if true, test scan value (not including prefix)
+   *   match with barcodeValueTest on each character. If matched, immediately
+   *   call the scanHandler with the value. This will generally make scans faster.
+   * @param  {Number} [scanOptions.scanDuration] - time allowed to complete the scan.
    * @param  {Function} scanHandler - called with the results of the scan
    * @return {Function} remove this listener
    */
-  onScan ({barcodePrefix, barcodeLength, scanDuration} = {}, scanHandler) {
+  onScan ({barcodePrefix, barcodeValueTest, finishScanOnMatch, scanDuration} = {}, scanHandler) {
     if (typeof barcodePrefix !== 'string') {
       throw new TypeError('barcodePrefix must be a string');
     }
-    if (barcodeLength && typeof barcodeLength !== 'number') {
-      throw new TypeError('barcodeLength must be a number');
+    if (typeof barcodeValueTest !== 'object' || typeof barcodeValueTest.test !== 'function') {
+      throw new TypeError('barcodeValueTest must be a regular expression');
+    }
+    if (finishScanOnMatch != null && typeof finishScanOnMatch !== 'boolean') { // eslint-disable-line no-eq-null
+      throw new TypeError('finishScanOnMatch must be a boolean');
     }
     if (scanDuration && typeof scanDuration !== 'number') {
       throw new TypeError('scanDuration must be a number');
@@ -24,58 +29,39 @@ export default {
       throw new TypeError('scanHandler must be a function');
     }
 
-    /**
-     * SwipeTrack calls this function, if defined, whenever a barcode is scanned
-     * within the SwipeTrack browser.  See "SwipeTrack Browser JavaScript Functions" section of
-     * SwipeTrack API: http://swipetrack.net/support/faq/pdf/SwipeTrack%20API%20(v5.0.0).pdf
-    */
-    if (typeof window.onScanAppBarCodeData !== 'function') {
-      window.onScanAppBarCodeData = function (barcode) {
-        window.onScanAppBarCodeData.scanHandlers.forEach((handler) => handler(barcode));
-        return true;
-      };
-      window.onScanAppBarCodeData.scanHandlers = [];
-    }
-    const swipeTrackHandler = function (barcode) {
-      if (barcode.match(`^${barcodePrefix}`) !== null)
-        scanHandler(barcode.slice(barcodePrefix.length));
-    };
-    window.onScanAppBarCodeData.scanHandlers.push(swipeTrackHandler);
-
     scanDuration = scanDuration || 50;
-    let isScanning = false;
+    let finishScanTimeoutId = null;
     let codeBuffer = '';
     let scannedPrefix = '';
     const finishScan = function () {
-      if (codeBuffer) {
-        if (!barcodeLength)
-          scanHandler(codeBuffer);
-        else if (codeBuffer.length >= barcodeLength)
-          scanHandler(codeBuffer.substr(0, barcodeLength));
+      if (codeBuffer && barcodeValueTest.test(codeBuffer)) {
+        scanHandler(codeBuffer);
       }
+      resetScanState();
+    };
+    const resetScanState = function () {
       scannedPrefix = '';
       codeBuffer = '';
-      isScanning = false;
     };
     const keypressHandler = function (e) {
       const char = String.fromCharCode(e.which);
       const charIndex = barcodePrefix.indexOf(char);
       const expectedPrefix = barcodePrefix.slice(0, charIndex);
-      if (!isScanning) {
-        isScanning = true;
-        setTimeout(finishScan, scanDuration);
+      if (!finishScanTimeoutId) {
+        finishScanTimeoutId = setTimeout(finishScan, scanDuration);
       }
       if (scannedPrefix === barcodePrefix && /[^\s]/.test(char)) {
         codeBuffer += char;
+        if (finishScanOnMatch && barcodeValueTest.test(codeBuffer)) {
+          clearTimeout(finishScanTimeoutId);
+          finishScan();
+        }
       } else if (scannedPrefix === expectedPrefix && char === barcodePrefix.charAt(charIndex)) {
         scannedPrefix += char;
       }
     };
     const removeListener = function () {
       document.removeEventListener('keypress', keypressHandler);
-      const swipeTrackHandlerIndex = window.onScanAppBarCodeData.scanHandlers.indexOf(swipeTrackHandler);
-      if (swipeTrackHandlerIndex >= 0)
-        window.onScanAppBarCodeData.scanHandlers.splice(swipeTrackHandlerIndex, 1);
     };
     document.addEventListener('keypress', keypressHandler);
     return removeListener;
