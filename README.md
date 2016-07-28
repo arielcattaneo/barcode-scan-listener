@@ -12,31 +12,18 @@ import barcodeScanListener from 'barcode-scan-listener';
 
 const removeScanListener = barcodeScanListener.onScan({
   barcodePrefix: 'L%',
+  barcodeValueTest: /^123$/,
+  finishScanOnMatch: true,
   scanDuration: 500
 }, function (barcode) {
   console.log(barcode);
 });
 
-// Now, scanning a barcode 'L%123abc' will log '123abc'
+// Now, scanning a barcode 'L%123abc' will log '123'
 
 removeScanListener()
 ```
 
-#### `barcodeLength`
-If your barcodes have a known, fixed length, eliminate partial scans and double scans
-by passng in `barcodeLength` - your callback will only be called if `barcodeLength`
-number of characters are reached, and any characters read past that length before
-`scanDuration` is reached will be ignored.
-
-```js
-barcodeScanListener.onScan({
-  barcodePrefix: 'L%',
-  barcodeLength: 24,
-  scanDuration: 500
-}, function (barcode) {
-  console.log(barcode);
-});
-```
 
 ## Contributing
 
