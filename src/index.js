@@ -40,6 +40,7 @@ export default {
       resetScanState();
     };
     const resetScanState = function () {
+      finishScanTimeoutId = null;
       scannedPrefix = '';
       codeBuffer = '';
     };

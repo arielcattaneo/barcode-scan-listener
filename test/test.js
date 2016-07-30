@@ -118,6 +118,35 @@ describe('barcodeScanListener.onScan()', function () {
       expect(scanHandler).to.have.been.calledOnce();
       expect(scanHandler).to.have.been.calledWith('123');
     });
+
+    it('allows scanning again if finishScanOnMatch false', function () {
+      const scanHandler = sinon.stub();
+      barcodeScanListener.onScan({
+        barcodePrefix: 'L%',
+        barcodeValueTest: /^123.*/,
+        finishScanOnMatch: false,
+        scanDuration: 50,
+      }, scanHandler);
+      scanBarcode('L%123ab', {scanDuration: 100});
+      scanBarcode('L%123cd', {scanDuration: 100});
+      expect(scanHandler).to.have.been.calledTwice();
+      expect(scanHandler).to.have.been.calledWith('123ab');
+      expect(scanHandler).to.have.been.calledWith('123cd');
+    });
+
+    it('allows scanning again if finishScanOnMatch true', function () {
+      const scanHandler = sinon.stub();
+      barcodeScanListener.onScan({
+        barcodePrefix: 'L%',
+        barcodeValueTest: /^123.*/,
+        finishScanOnMatch: true,
+        scanDuration: 50,
+      }, scanHandler);
+      scanBarcode('L%123ab', {scanDuration: 10});
+      scanBarcode('L%123cd', {scanDuration: 10});
+      expect(scanHandler).to.have.been.calledTwice();
+      expect(scanHandler).to.have.been.calledWith('123');
+    });
   });
 
   describe('scanDuration', function () {
