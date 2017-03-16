@@ -31,34 +31,42 @@ export default {
 
     scanDuration = scanDuration || 50;
     let finishScanTimeoutId = null;
-    let codeBuffer = '';
-    let scannedPrefix = '';
+    let prefixBuffer = '';
+    let valueBuffer = '';
+    let matchedPrefix = false;
     const finishScan = function () {
-      if (codeBuffer && barcodeValueTest.test(codeBuffer)) {
-        scanHandler(codeBuffer);
+      if (matchedPrefix && barcodeValueTest.test(valueBuffer)) {
+        scanHandler(valueBuffer);
       }
       resetScanState();
     };
     const resetScanState = function () {
       finishScanTimeoutId = null;
-      scannedPrefix = '';
-      codeBuffer = '';
+      prefixBuffer = '';
+      valueBuffer = '';
+      matchedPrefix = false;
     };
     const keypressHandler = function (e) {
       const char = String.fromCharCode(e.which);
       const charIndex = barcodePrefix.indexOf(char);
-      const expectedPrefix = barcodePrefix.slice(0, charIndex);
+      const expectedPrefixSlice = barcodePrefix.slice(0, charIndex);
+
       if (!finishScanTimeoutId) {
         finishScanTimeoutId = setTimeout(finishScan, scanDuration);
       }
-      if (scannedPrefix === barcodePrefix && /[^\s]/.test(char)) {
-        codeBuffer += char;
-        if (finishScanOnMatch && barcodeValueTest.test(codeBuffer)) {
+
+      if (prefixBuffer === expectedPrefixSlice && char === barcodePrefix.charAt(charIndex)) {
+        prefixBuffer += char;
+      } else if (matchedPrefix) {
+        valueBuffer += char;
+      }
+
+      if (prefixBuffer === barcodePrefix) {
+        matchedPrefix = true;
+        if (finishScanOnMatch && barcodeValueTest.test(valueBuffer)) {
           clearTimeout(finishScanTimeoutId);
           finishScan();
         }
-      } else if (scannedPrefix === expectedPrefix && char === barcodePrefix.charAt(charIndex)) {
-        scannedPrefix += char;
       }
     };
     const removeListener = function () {

@@ -104,6 +104,17 @@ describe('barcodeScanListener.onScan()', function () {
       scanBarcode('C%213abc');
       expect(scanHandler).not.to.have.been.called();
     });
+
+    it('supports empty value', function () {
+      const scanHandler = sinon.stub();
+      barcodeScanListener.onScan({
+        barcodePrefix: 'L%',
+        barcodeValueTest: /^$/,
+      }, scanHandler);
+      scanBarcode('L%');
+      expect(scanHandler).to.have.been.calledOnce();
+      expect(scanHandler).to.have.been.calledWith('');
+    });
   });
 
   describe('finishScanOnMatch', function () {
