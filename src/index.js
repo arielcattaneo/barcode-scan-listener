@@ -57,7 +57,7 @@ export default {
 
       if (prefixBuffer === expectedPrefixSlice && char === barcodePrefix.charAt(charIndex)) {
         prefixBuffer += char;
-      } else if (matchedPrefix) {
+      } else if (matchedPrefix || barcodePrefix === '') {
         valueBuffer += char;
       }
 

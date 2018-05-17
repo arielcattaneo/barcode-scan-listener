@@ -72,6 +72,17 @@ describe('barcodeScanListener.onScan()', function () {
       expect(scanHandler).to.have.been.calledWith('123abc');
     });
 
+    it('calls handler for scanned barcode with empty prefix', function () {
+      const scanHandler = sinon.stub();
+      barcodeScanListener.onScan({
+        barcodePrefix: '',
+        barcodeValueTest: /.*/,
+      }, scanHandler);
+      scanBarcode('L%123abc');
+      expect(scanHandler).to.have.been.calledOnce();
+      expect(scanHandler).to.have.been.calledWith('L%123abc');
+    });
+
     it('does not call handler if barcode does not match prefix', function () {
       const scanHandler = sinon.stub();
       barcodeScanListener.onScan({
@@ -105,7 +116,7 @@ describe('barcodeScanListener.onScan()', function () {
       expect(scanHandler).not.to.have.been.called();
     });
 
-    it('supports empty value', function () {
+    it('supports empty value with prefix', function () {
       const scanHandler = sinon.stub();
       barcodeScanListener.onScan({
         barcodePrefix: 'L%',
@@ -115,6 +126,7 @@ describe('barcodeScanListener.onScan()', function () {
       expect(scanHandler).to.have.been.calledOnce();
       expect(scanHandler).to.have.been.calledWith('');
     });
+
   });
 
   describe('finishScanOnMatch', function () {
